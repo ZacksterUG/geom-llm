@@ -8,5 +8,6 @@
     <include file="changelogs/001-init-tasks.sql" relativeToChangelogFile="true"/>
     <include file="changelogs/002-new-tasks.sql" relativeToChangelogFile="true"/>
     <include file="changelogs/003-new-task.sql" relativeToChangelogFile="true"/>
+    <include file="changelogs/004-math-notation.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

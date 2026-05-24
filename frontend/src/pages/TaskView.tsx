@@ -4,6 +4,7 @@ import { Title, Text, Textarea, Button, Stack, Grid, Card, Loader, Alert } from 
 import { notifications } from '@mantine/notifications';
 import type { Task, ProofStep, ValidationRequest, ValidationResponse, FigureState } from '../types';
 import GeometryCanvas from '../components/GeometryCanvas';
+import MathText from '../components/MathText';
 
 export default function TaskView() {
   const { id } = useParams<{ id: string }>();
@@ -70,7 +71,7 @@ export default function TaskView() {
         <Stack h="100%">
           <Title order={2}>{task.title}</Title>
           <Card withBorder p="md">
-            <Text>{task.condition_text}</Text>
+            <Text><MathText>{task.condition_text}</MathText></Text>
           </Card>
           <Textarea
             label="Доказательство"

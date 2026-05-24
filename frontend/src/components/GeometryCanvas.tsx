@@ -4,6 +4,10 @@ import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { FigureState, Vertex, Edge } from '../types';
 
+function formatVertexId(id: string): string {
+  return id.replace(/(\d+)/g, '<sub>$1</sub>');
+}
+
 interface Section {
   id: string;
   vertexIds: string[];
@@ -330,13 +334,13 @@ function SceneContent({
               style={{
                 color: 'white',
                 fontSize: 12,
+                fontStyle: 'italic',
                 fontWeight: 'bold',
                 textShadow: '0 0 4px black, 0 0 4px black, 0 0 4px black',
                 whiteSpace: 'nowrap',
               }}
-            >
-              {v.id}
-            </span>
+              dangerouslySetInnerHTML={{ __html: formatVertexId(v.id) }}
+            />
           </Html>
         </mesh>
       ))}
@@ -786,7 +790,7 @@ export default function GeometryCanvas({
                     fontSize: 10,
                   }}
                 >
-                  {v.id}
+                  <span dangerouslySetInnerHTML={{ __html: formatVertexId(v.id) }} />
                 </button>
               ))}
             </div>

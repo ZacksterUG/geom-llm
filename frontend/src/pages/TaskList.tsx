@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Title, Card, Text, Button, Stack, Group, Loader } from '@mantine/core';
 import type { Task } from '../types';
+import MathText from '../components/MathText';
 
 export default function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -29,7 +30,7 @@ export default function TaskList() {
             <Group justify="space-between">
               <div>
                 <Text fw={500} size="lg">{task.title}</Text>
-                <Text c="dimmed" lineClamp={2}>{task.condition_text}</Text>
+                <Text c="dimmed" lineClamp={2}><MathText>{task.condition_text}</MathText></Text>
                 <Text size="sm" c="blue">{task.difficulty_level}</Text>
               </div>
               <Button onClick={() => navigate(`/task/${task.id}`)}>
