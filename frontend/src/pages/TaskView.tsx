@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Title, Text, Textarea, Button, Stack, Grid, Card, Loader, Alert } from '@mantine/core';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Title, Text, Textarea, Button, Stack, Grid, Card, Loader, Alert, Group } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import type { Task, ProofStep, ValidationRequest, ValidationResponse, FigureState } from '../types';
 import GeometryCanvas from '../components/GeometryCanvas';
@@ -8,6 +8,7 @@ import MathText from '../components/MathText';
 
 export default function TaskView() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [task, setTask] = useState<Task | null>(null);
   const [proof, setProof] = useState('');
   const [loading, setLoading] = useState(true);
@@ -69,7 +70,12 @@ export default function TaskView() {
     <Grid p="md" h="100vh">
       <Grid.Col span={4}>
         <Stack h="100%">
-          <Title order={2}>{task.title}</Title>
+          <Group>
+            <Button variant="subtle" onClick={() => navigate('/')} size="sm">
+              ← Назад к списку
+            </Button>
+          </Group>
+          <Title order={2}><MathText>{task.title}</MathText></Title>
           <Card withBorder p="md">
             <Text><MathText>{task.condition_text}</MathText></Text>
           </Card>

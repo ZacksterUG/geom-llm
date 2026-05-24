@@ -25,6 +25,12 @@ export interface ProofStep {
   comment?: string;
 }
 
+export interface PolyhedronType {
+  id: number;
+  name: string;
+  display_order: number;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -33,6 +39,25 @@ export interface Task {
   reference_figure_state?: FigureState;
   reference_proof?: ProofStep[];
   difficulty_level: string;
+  polyhedron_types?: PolyhedronType[];
+}
+
+export interface PaginatedTasks {
+  items: Task[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface TaskFilters {
+  search?: string;
+  polyhedron_type_ids?: string;
+  difficulty_level?: string;
+  sort_by: string;
+  sort_order: string;
+  page: number;
+  page_size: number;
 }
 
 export interface ValidationRequest {
