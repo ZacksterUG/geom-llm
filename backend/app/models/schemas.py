@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List, Dict
+from typing import Optional, List
 from uuid import UUID
 
 # Базовая схема для элементов фигуры
@@ -20,14 +20,17 @@ class FigureState(BaseModel):
     relations: List[str] = []
     actions_log: List[str] = []
 
-# Схема для валидации шага (Payload для /api/validate)
 class ProofStep(BaseModel):
     step_id: int
     claim: str
     justification_id: Optional[str] = None
     comment: Optional[str] = None
 
-# Схема задачи (ответ API)
+class PolyhedronTypeResponse(BaseModel):
+    id: int
+    name: str
+    display_order: int
+
 class TaskResponse(BaseModel):
     id: UUID
     title: str
@@ -36,6 +39,14 @@ class TaskResponse(BaseModel):
     reference_figure_state: Optional[FigureState] = None
     reference_proof: Optional[List[ProofStep]] = None
     difficulty_level: str
+    polyhedron_types: List[PolyhedronTypeResponse] = []
+
+class PaginatedTaskResponse(BaseModel):
+    items: List[TaskResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 
 class ValidationRequest(BaseModel):
     task_id: UUID
@@ -44,11 +55,10 @@ class ValidationRequest(BaseModel):
     proof_history: List[ProofStep]
     current_step: ProofStep
 
-# Схема ответа от LLM (и для фронтенда)
 class ValidationResponse(BaseModel):
     model_config = ConfigDict(extra='ignore')
 
-    status: str  # "ok" | "warning" | "error"
+    status: str
     geometry_valid: bool
     logic_valid: bool
     reason: str

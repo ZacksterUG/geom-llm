@@ -1,11 +1,17 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
-from app.models.schemas import TaskResponse, ValidationRequest, ValidationResponse
-from app.models.tables import TaskTable, Base
+from typing import Optional
+from app.models.schemas import (
+    TaskResponse, PaginatedTaskResponse, PolyhedronTypeResponse,
+    ValidationRequest, ValidationResponse
+)
+from app.models.tables import TaskTable, PolyhedronType, Base
 from app.db.session import engine, get_db
 from app.core.ollama_client import validate_with_ollama
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_
 import uuid
+import math
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,10 +28,64 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/api/tasks", response_model=list[TaskResponse])
-async def get_tasks(db: Session = Depends(get_db)):
-    tasks = db.query(TaskTable).all()
-    return [
+
+@app.get("/api/tasks", response_model=PaginatedTaskResponse)
+async def get_tasks(
+    search: Optional[str] = Query(None, description="Text search in title and condition"),
+    polyhedron_type_ids: Optional[str] = Query(None, description="Comma-separated polyhedron type IDs"),
+    difficulty_level: Optional[str] = Query(None, description="Filter by difficulty level"),
+    date_from: Optional[str] = Query(None, description="Filter by created_at >= date (ISO format)"),
+    date_to: Optional[str] = Query(None, description="Filter by created_at <= date (ISO format)"),
+    sort_by: str = Query("created_at", description="Sort field: created_at, title, difficulty_level"),
+    sort_order: str = Query("desc", description="Sort order: asc or desc"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Items per page"),
+    db: Session = Depends(get_db),
+):
+    query = db.query(TaskTable).options(joinedload(TaskTable.polyhedron_types))
+
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            or_(
+                TaskTable.title.ilike(search_pattern),
+                TaskTable.condition_text.ilike(search_pattern),
+            )
+        )
+
+    if polyhedron_type_ids:
+        ids = [int(x.strip()) for x in polyhedron_type_ids.split(",") if x.strip().isdigit()]
+        if ids:
+            query = query.join(TaskTable.polyhedron_types).filter(
+                PolyhedronType.id.in_(ids)
+            )
+
+    if difficulty_level:
+        query = query.filter(TaskTable.difficulty_level == difficulty_level)
+
+    if date_from:
+        query = query.filter(TaskTable.created_at >= date_from)
+
+    if date_to:
+        query = query.filter(TaskTable.created_at <= date_to)
+
+    sort_column = {
+        "created_at": TaskTable.created_at,
+        "title": TaskTable.title,
+        "difficulty_level": TaskTable.difficulty_level,
+    }.get(sort_by, TaskTable.created_at)
+
+    if sort_order == "asc":
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+
+    total = query.count()
+    total_pages = math.ceil(total / page_size) if total > 0 else 1
+
+    tasks = query.offset((page - 1) * page_size).limit(page_size).all()
+
+    items = [
         TaskResponse(
             id=task.id,
             title=task.title,
@@ -34,15 +94,39 @@ async def get_tasks(db: Session = Depends(get_db)):
             reference_figure_state=task.reference_figure_state,
             reference_proof=task.reference_proof,
             difficulty_level=task.difficulty_level,
+            polyhedron_types=[
+                PolyhedronTypeResponse(id=pt.id, name=pt.name, display_order=pt.display_order)
+                for pt in task.polyhedron_types
+            ],
         )
         for task in tasks
     ]
 
+    return PaginatedTaskResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
+
+
+@app.get("/api/tasks/difficulty-levels", response_model=list[str])
+async def get_difficulty_levels(db: Session = Depends(get_db)):
+    levels = db.query(TaskTable.difficulty_level).distinct().order_by(TaskTable.difficulty_level).all()
+    return [level[0] for level in levels]
+
+
 @app.get("/api/tasks/{task_id}", response_model=TaskResponse)
 async def get_task(task_id: str, db: Session = Depends(get_db)):
-    task = db.query(TaskTable).filter(TaskTable.id == uuid.UUID(task_id)).first()
+    task = (
+        db.query(TaskTable)
+        .options(joinedload(TaskTable.polyhedron_types))
+        .filter(TaskTable.id == uuid.UUID(task_id))
+        .first()
+    )
     if not task:
-        return {"error": "Task not found"}
+        raise HTTPException(status_code=404, detail="Task not found")
     return TaskResponse(
         id=task.id,
         title=task.title,
@@ -51,7 +135,21 @@ async def get_task(task_id: str, db: Session = Depends(get_db)):
         reference_figure_state=task.reference_figure_state,
         reference_proof=task.reference_proof,
         difficulty_level=task.difficulty_level,
+        polyhedron_types=[
+            PolyhedronTypeResponse(id=pt.id, name=pt.name, display_order=pt.display_order)
+            for pt in task.polyhedron_types
+        ],
     )
+
+
+@app.get("/api/polyhedron-types", response_model=list[PolyhedronTypeResponse])
+async def get_polyhedron_types(db: Session = Depends(get_db)):
+    types = db.query(PolyhedronType).order_by(PolyhedronType.display_order).all()
+    return [
+        PolyhedronTypeResponse(id=t.id, name=t.name, display_order=t.display_order)
+        for t in types
+    ]
+
 
 @app.post("/api/validate", response_model=ValidationResponse)
 async def validate_proof(request: ValidationRequest, db: Session = Depends(get_db)):
@@ -66,4 +164,3 @@ async def validate_proof(request: ValidationRequest, db: Session = Depends(get_d
     except Exception as e:
         logger.error(f"Validation endpoint error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal validation error: {str(e)}")
-
