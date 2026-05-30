@@ -15,5 +15,9 @@
     <include file="changelogs/008-new-tasks-part2.sql" relativeToChangelogFile="true"/>
     <include file="changelogs/009-remove-difficulty.sql" relativeToChangelogFile="true"/>
     <include file="changelogs/010-remove-prisms-and-others.sql" relativeToChangelogFile="true"/>
+    <include file="changelogs/011-fix-pyramid-orientation.sql" relativeToChangelogFile="true"/>
+    <include file="changelogs/012-keep-only-two-cube-tasks.sql" relativeToChangelogFile="true"/>
+    <include file="changelogs/013-keep-only-two-parallelepiped-tasks.sql" relativeToChangelogFile="true"/>
+    <include file="changelogs/014-fix-task-figures.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
