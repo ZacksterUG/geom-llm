@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Title, Text, Textarea, Button, Stack, Grid, Card, Loader, Alert, Group } from '@mantine/core';
+import { Title, Text, Textarea, Button, Grid, Card, Loader, Alert, Group } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import type { Task, ProofStep, ValidationRequest, ValidationResponse, FigureState } from '../types';
 import GeometryCanvas from '../components/GeometryCanvas';
@@ -66,19 +66,23 @@ export default function TaskView() {
   if (loading) return <Loader />;
   if (!task) return <Text>Задача не найдена</Text>;
 
+  const panelHeight = 'calc(100vh - 2 * var(--mantine-spacing-md))';
+
   return (
-    <Grid p="md" h="100vh">
-      <Grid.Col span={4}>
-        <Stack h="100%">
-          <Group>
+    <Grid p="md" h="100vh" style={{ overflow: 'hidden', margin: 0 }}>
+      <Grid.Col span={4} style={{ height: panelHeight, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flexShrink: 0 }}>
+          <Group mb="sm">
             <Button variant="subtle" onClick={() => navigate('/')} size="sm">
               ← Назад к списку
             </Button>
           </Group>
-          <Title order={2}><MathText>{task.title}</MathText></Title>
-          <Card withBorder p="md">
+          <Title order={2} mb="sm"><MathText>{task.title}</MathText></Title>
+          <Card withBorder p="md" mb="sm">
             <Text><MathText>{task.condition_text}</MathText></Text>
           </Card>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <Textarea
             label="Доказательство"
             placeholder="Введите шаги доказательства..."
@@ -86,20 +90,21 @@ export default function TaskView() {
             onChange={e => setProof(e.currentTarget.value)}
             autosize
             minRows={10}
-            style={{ flex: 1 }}
           />
-          <Button onClick={handleValidate} loading={validating} fullWidth>
+        </div>
+        <div style={{ flexShrink: 0 }}>
+          <Button onClick={handleValidate} loading={validating} fullWidth mt="sm">
             Проверить
           </Button>
           {validationResult && (
-            <Alert color={validationResult.status === 'ok' ? 'green' : 'red'}>
+            <Alert mt="sm" color={validationResult.status === 'ok' ? 'green' : 'red'}>
               <Text fw={500}>{validationResult.reason}</Text>
               {validationResult.hint && <Text mt="xs">Подсказка: {validationResult.hint}</Text>}
             </Alert>
           )}
-        </Stack>
+        </div>
       </Grid.Col>
-      <Grid.Col span={8}>
+      <Grid.Col span={8} style={{ height: panelHeight }}>
         <GeometryCanvas
           initialFigure={task.initial_figure_state}
           onFigureChange={setFigureState}
