@@ -20,22 +20,20 @@ export default function TaskList() {
   const [debouncedSearch] = useDebouncedValue(search, 400);
   const [polyhedronTypes, setPolyhedronTypes] = useState<PolyhedronType[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
-  const [difficultyLevels, setDifficultyLevels] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>('created_at');
   const [sortOrder, setSortOrder] = useState<string>('desc');
   const navigate = useNavigate();
 
-  const filtersRef = useRef({ debouncedSearch: '', selectedTypes: '', difficultyFilter: null as string | null, sortBy: 'created_at', sortOrder: 'desc' });
+  const filtersRef = useRef({ debouncedSearch: '', selectedTypes: '', sortBy: 'created_at', sortOrder: 'desc' });
 
   useEffect(() => {
-    const filterKey = `${debouncedSearch}|${selectedTypes.join(',')}|${difficultyFilter}|${sortBy}|${sortOrder}`;
-    const prevKey = `${filtersRef.current.debouncedSearch}|${filtersRef.current.selectedTypes}|${filtersRef.current.difficultyFilter}|${filtersRef.current.sortBy}|${filtersRef.current.sortOrder}`;
-    filtersRef.current = { debouncedSearch, selectedTypes: selectedTypes.join(','), difficultyFilter, sortBy, sortOrder };
+    const filterKey = `${debouncedSearch}|${selectedTypes.join(',')}|${sortBy}|${sortOrder}`;
+    const prevKey = `${filtersRef.current.debouncedSearch}|${filtersRef.current.selectedTypes}|${filtersRef.current.sortBy}|${filtersRef.current.sortOrder}`;
+    filtersRef.current = { debouncedSearch, selectedTypes: selectedTypes.join(','), sortBy, sortOrder };
     if (filterKey !== prevKey) {
       setPage(1);
     }
-  }, [debouncedSearch, selectedTypes, difficultyFilter, sortBy, sortOrder]);
+  }, [debouncedSearch, selectedTypes, sortBy, sortOrder]);
 
   useEffect(() => {
     setLoading(true);
@@ -46,7 +44,6 @@ export default function TaskList() {
     params.set('sort_order', sortOrder);
     if (debouncedSearch) params.set('search', debouncedSearch);
     if (selectedTypes.length > 0) params.set('polyhedron_type_ids', selectedTypes.join(','));
-    if (difficultyFilter) params.set('difficulty_level', difficultyFilter);
 
     fetch(`http://localhost:8000/api/tasks?${params}`)
       .then(res => res.json())
@@ -60,17 +57,12 @@ export default function TaskList() {
         setTasks([]);
         setLoading(false);
       });
-  }, [page, debouncedSearch, selectedTypes, difficultyFilter, sortBy, sortOrder]);
+  }, [page, debouncedSearch, selectedTypes, sortBy, sortOrder]);
 
   useEffect(() => {
     fetch('http://localhost:8000/api/polyhedron-types')
       .then(res => res.json())
       .then((data: PolyhedronType[]) => setPolyhedronTypes(data))
-      .catch(() => {});
-
-    fetch('http://localhost:8000/api/tasks/difficulty-levels')
-      .then(res => res.json())
-      .then((data: string[]) => setDifficultyLevels(data))
       .catch(() => {});
   }, []);
 
@@ -97,13 +89,6 @@ export default function TaskList() {
               onChange={setSelectedTypes}
               clearable
             />
-            <Select
-              placeholder="Сложность"
-              data={difficultyLevels.map(d => ({ value: d, label: d }))}
-              value={difficultyFilter}
-              onChange={setDifficultyFilter}
-              clearable
-            />
           </Group>
           <Group justify="space-between">
             <Group gap="xs">
@@ -113,7 +98,6 @@ export default function TaskList() {
                 data={[
                   { value: 'created_at', label: 'По дате создания' },
                   { value: 'title', label: 'По названию' },
-                  { value: 'difficulty_level', label: 'По сложности' },
                 ]}
                 value={sortBy}
                 onChange={v => v && setSortBy(v)}
@@ -142,7 +126,6 @@ export default function TaskList() {
                     <Text fw={500} size="lg"><MathText>{task.title}</MathText></Text>
                     <Text c="dimmed" lineClamp={2}><MathText>{task.condition_text}</MathText></Text>
                     <Group gap="xs" mt="xs">
-                      <Badge color="blue" variant="light">{task.difficulty_level}</Badge>
                       {task.polyhedron_types?.map(pt => (
                         <Badge key={pt.id} color="teal" variant="light" size="sm">{pt.name}</Badge>
                       ))}

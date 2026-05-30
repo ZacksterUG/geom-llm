@@ -13,5 +13,7 @@
     <include file="changelogs/006-assign-types.sql" relativeToChangelogFile="true"/>
     <include file="changelogs/007-new-tasks-part1.sql" relativeToChangelogFile="true"/>
     <include file="changelogs/008-new-tasks-part2.sql" relativeToChangelogFile="true"/>
+    <include file="changelogs/009-remove-difficulty.sql" relativeToChangelogFile="true"/>
+    <include file="changelogs/010-remove-prisms-and-others.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

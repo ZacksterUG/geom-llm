@@ -33,10 +33,9 @@ app.add_middleware(
 async def get_tasks(
     search: Optional[str] = Query(None, description="Text search in title and condition"),
     polyhedron_type_ids: Optional[str] = Query(None, description="Comma-separated polyhedron type IDs"),
-    difficulty_level: Optional[str] = Query(None, description="Filter by difficulty level"),
     date_from: Optional[str] = Query(None, description="Filter by created_at >= date (ISO format)"),
     date_to: Optional[str] = Query(None, description="Filter by created_at <= date (ISO format)"),
-    sort_by: str = Query("created_at", description="Sort field: created_at, title, difficulty_level"),
+    sort_by: str = Query("created_at", description="Sort field: created_at, title"),
     sort_order: str = Query("desc", description="Sort order: asc or desc"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Items per page"),
@@ -60,9 +59,6 @@ async def get_tasks(
                 PolyhedronType.id.in_(ids)
             )
 
-    if difficulty_level:
-        query = query.filter(TaskTable.difficulty_level == difficulty_level)
-
     if date_from:
         query = query.filter(TaskTable.created_at >= date_from)
 
@@ -72,7 +68,6 @@ async def get_tasks(
     sort_column = {
         "created_at": TaskTable.created_at,
         "title": TaskTable.title,
-        "difficulty_level": TaskTable.difficulty_level,
     }.get(sort_by, TaskTable.created_at)
 
     if sort_order == "asc":
@@ -93,7 +88,6 @@ async def get_tasks(
             initial_figure_state=task.initial_figure_state,
             reference_figure_state=task.reference_figure_state,
             reference_proof=task.reference_proof,
-            difficulty_level=task.difficulty_level,
             polyhedron_types=[
                 PolyhedronTypeResponse(id=pt.id, name=pt.name, display_order=pt.display_order)
                 for pt in task.polyhedron_types
@@ -109,12 +103,6 @@ async def get_tasks(
         page_size=page_size,
         total_pages=total_pages,
     )
-
-
-@app.get("/api/tasks/difficulty-levels", response_model=list[str])
-async def get_difficulty_levels(db: Session = Depends(get_db)):
-    levels = db.query(TaskTable.difficulty_level).distinct().order_by(TaskTable.difficulty_level).all()
-    return [level[0] for level in levels]
 
 
 @app.get("/api/tasks/{task_id}", response_model=TaskResponse)
@@ -134,7 +122,6 @@ async def get_task(task_id: str, db: Session = Depends(get_db)):
         initial_figure_state=task.initial_figure_state,
         reference_figure_state=task.reference_figure_state,
         reference_proof=task.reference_proof,
-        difficulty_level=task.difficulty_level,
         polyhedron_types=[
             PolyhedronTypeResponse(id=pt.id, name=pt.name, display_order=pt.display_order)
             for pt in task.polyhedron_types

@@ -38,7 +38,6 @@ class TaskResponse(BaseModel):
     initial_figure_state: FigureState
     reference_figure_state: Optional[FigureState] = None
     reference_proof: Optional[List[ProofStep]] = None
-    difficulty_level: str
     polyhedron_types: List[PolyhedronTypeResponse] = []
 
 class PaginatedTaskResponse(BaseModel):

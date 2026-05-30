@@ -31,7 +31,6 @@ class TaskTable(Base):
     initial_figure_state: Mapped[dict] = mapped_column(JSONB, nullable=False)
     reference_figure_state: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     reference_proof: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
-    difficulty_level: Mapped[str] = mapped_column(String(50), default="10-11 класс")
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     polyhedron_types: Mapped[list[PolyhedronType]] = relationship(

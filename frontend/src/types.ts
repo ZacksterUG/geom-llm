@@ -38,7 +38,6 @@ export interface Task {
   initial_figure_state: FigureState;
   reference_figure_state?: FigureState;
   reference_proof?: ProofStep[];
-  difficulty_level: string;
   polyhedron_types?: PolyhedronType[];
 }
 
@@ -53,7 +52,6 @@ export interface PaginatedTasks {
 export interface TaskFilters {
   search?: string;
   polyhedron_type_ids?: string;
-  difficulty_level?: string;
   sort_by: string;
   sort_order: string;
   page: number;
